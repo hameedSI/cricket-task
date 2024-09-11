@@ -31,7 +31,6 @@
         <div class="row">
           <div v-for="player in filteredPlayersByRole(role)" :key="player.name" class="col-md-4 mb-4">
             <div class="card">
-              <!-- <img :src="player.image" class="card-img-top" alt="player image" /> -->
               <div class="card-body">
                 <h5 class="card-title">{{ player.name }}</h5>
                 <p class="card-text">Matches: {{ player.matches }}</p>
@@ -50,16 +49,24 @@
 </template>
 
 <script>
-import playerData from '@/assets/players.json';
-
 export default {
   data() {
     return {
-      players: playerData.originalPlayers,
+      players: [],
       selectedTeam: 'ALL',
       searchQuery: '',
-      teams: [...new Set(playerData.originalPlayers.map(player => player.team_name))], // Dynamically get all team names
+      teams: [],
     };
+  },
+  mounted() {
+    // Fetch the players data from the public folder
+    fetch('/players.json')
+      .then(response => response.json())
+      .then(data => {
+        this.players = data.originalPlayers;
+        this.teams = [...new Set(data.originalPlayers.map(player => player.team_name))]; // Dynamically get all team names
+      })
+      .catch(error => console.error('Error fetching player data:', error));
   },
   methods: {
     // Filter players based on the selected team
