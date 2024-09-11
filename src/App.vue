@@ -1,98 +1,93 @@
 <template>
-  <div id="app">
-    <h1>Player List</h1>
-    <div v-if="loading">Loading...</div>
-    <div v-else>
-      <!-- Filter or Display Team -->
-      <select v-model="selectedTeam" @change="filterByTeam">
-        <option value="">All Teams</option>
-        <option v-for="team in teams" :key="team" :value="team">{{ team }}</option>
-      </select>
+  <div>
+    <!-- Navigation and Team Filter -->
+    <nav class="navbar navbar-expand-lg bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Sportz Interactive</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <!-- Dropdown to Filter Players by Team -->
+            <select v-model="selectedTeam" class="form-select" @change="filterPlayers">
+              <option value="ALL">ALL Teams</option>
+              <option v-for="team in teams" :key="team" :value="team">{{ team }}</option>
+            </select>
+          </ul>
+          <!-- Search Form for Player Names -->
+          <form class="d-flex" role="search">
+            <input v-model="searchQuery" class="form-control me-2" type="search" placeholder="Search">
+            <button class="btn btn-outline-success" type="button" @click="searchPlayers">Search</button>
+          </form>
+        </div>
+      </div>
+    </nav>
 
-      <!-- Players List -->
-      <div v-for="player in filteredPlayers" :key="player.name" class="player-card">
-        <img :src="player.image" alt="player image" class="player-image" />
-        <h2>{{ player.name }}</h2>
-        <p>Matches: {{ player.matches }}</p>
-        <p>Role: {{ getRole(player.role) }}</p>
-        <p>Runs: {{ player.runs }}</p>
-        <p>50s/100s: {{ player['50s'] }}/{{ player['100s'] }}</p>
-        <p>Highest Score: {{ player.highest_score }}</p>
-        <p>Best Bowling Figures: {{ player.best_bowling_figures }}</p>
-        <p>Team: {{ player.team_name }}</p>
+    <!-- Displaying Player Cards -->
+    <div class="container text-center">
+      <div v-for="role in ['Batsman', 'Bowler', 'All rounder']" :key="role">
+        <h1>{{ role }}</h1>
+        <div class="row">
+          <div v-for="player in filteredPlayersByRole(role)" :key="player.name" class="col-md-4 mb-4">
+            <div class="card">
+              <!-- <img :src="player.image" class="card-img-top" alt="player image" /> -->
+              <div class="card-body">
+                <h5 class="card-title">{{ player.name }}</h5>
+                <p class="card-text">Matches: {{ player.matches }}</p>
+                <p class="card-text">Runs: {{ player.runs }}</p>
+                <p class="card-text">50/100s: {{ player['50s'] }}/{{ player['100s'] }}</p>
+                <p class="card-text">Highest Score: {{ player.highest_score }}</p>
+                <p class="card-text">Team Name: {{ player.team_name }}</p>
+                <p class="card-text">Best Bowling Figures: {{ player.best_bowling_figures }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+import playerData from '@/assets/players.json';
 
 export default {
   data() {
     return {
-      players: [], // To store player data from the API or JSON file
-      filteredPlayers: [], // To store filtered player data
-      teams: [], // To store team names for filter
-      selectedTeam: '', // For team filter
-      loading: true, // To show loading state
+      players: playerData.originalPlayers,
+      selectedTeam: 'ALL',
+      searchQuery: '',
+      teams: [...new Set(playerData.originalPlayers.map(player => player.team_name))], // Dynamically get all team names
     };
   },
-  created() {
-    this.fetchPlayers(); // Fetch data when component is created
-  },
   methods: {
-    async fetchPlayers() {
-      try {
-        // Fetching data from a local JSON file or API endpoint
-        const response = await axios.get('../assets/players.json'); // Update with actual path if local
-        this.players = response.data.originalPlayers;
-        this.filteredPlayers = this.players;
-        this.getTeams(); // Get unique team names for filtering
-        this.loading = false; // Data loaded successfully
-      } catch (error) {
-        console.error('Error fetching player data:', error);
-      }
+    // Filter players based on the selected team
+    filterPlayers() {
+      return this.players.filter(player => 
+        this.selectedTeam === 'ALL' || player.team_name === this.selectedTeam
+      );
     },
-    getTeams() {
-      // Get unique team names
-      this.teams = [...new Set(this.players.map(player => player.team_name))];
+    // Filter players by name based on search query
+    searchPlayers() {
+      return this.filterPlayers().filter(player =>
+        player.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
     },
-    filterByTeam() {
-      // Filter players by selected team
-      if (this.selectedTeam) {
-        this.filteredPlayers = this.players.filter(player => player.team_name === this.selectedTeam);
-      } else {
-        this.filteredPlayers = this.players; // If no team is selected, show all players
-      }
-    },
-    getRole(roleId) {
-      // Map the role ID to a human-readable role name
-      const roles = {
-        2: 'Batsman',
-        3: 'All-rounder',
-        4: 'Bowler',
-      };
-      return roles[roleId] || 'Unknown';
+    // Filter players by role (Batsman, Bowler, All rounder)
+    filteredPlayersByRole(role) {
+      let roleValue = 2; // Batsman by default
+      if (role === 'Bowler') roleValue = 4;
+      if (role === 'All rounder') roleValue = 3;
+      return this.searchPlayers().filter(player => player.role === roleValue);
     },
   },
 };
 </script>
 
-<style>
-/* Basic styles for the player card */
-.player-card {
-  border: 1px solid #ddd;
-  padding: 10px;
-  margin: 10px;
-  display: inline-block;
-  text-align: center;
-  width: 200px;
-  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-}
-.player-image {
-  width: 130px;
-  height: 150px;
-  object-fit: cover;
+<style scoped>
+.card {
+  margin: 20px;
+  width: 18rem;
 }
 </style>
