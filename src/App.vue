@@ -1,11 +1,11 @@
 <template>
   <div>
     <!-- Navigation and Team Filter -->
-    <nav class="navbar navbar-expand-lg bg-light">
+    <nav class="navbar navbar-expand-lg bg-dark">
       <div class="container-fluid">
-        <a class="navbar-brand" href="#">Sportz Interactive</a>
+        <a class="navbar-brand text-white" href="#">Sportz Interactive</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-          <span class="navbar-toggler-icon"></span>
+          <span class="navbar-toggler-icon"></span> 
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
@@ -30,7 +30,7 @@
         <h1>{{ role }}</h1>
         <div class="row">
           <div v-for="player in filteredPlayersByRole(role)" :key="player.name" class="col-md-4 mb-4">
-            <div class="card">
+            <div class="card bg-dark text-white">
               <div class="card-body">
                 <h5 class="card-title">{{ player.name }}</h5>
                 <p class="card-text">Matches: {{ player.matches }}</p>
